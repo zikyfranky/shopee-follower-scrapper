@@ -12,7 +12,7 @@ If Python is installed on your PC, open terminal or command prompt and navigate 
 
 Finally, run `python main.py`
 
-Just leave the console on, when it's done, you should see a followers.txt file, each line containing a link to user profile and username
+Just leave the console on, when it's done, you should see a followers.txt file, each line containing a link to user profile.
 
 Thanks
 Regards
