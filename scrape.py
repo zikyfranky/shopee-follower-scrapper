@@ -43,7 +43,7 @@ class Shopee():
 
         str: the webpage html as a string
         """
-        print("Fetching Request")
+        print(f"Fetching {self.current} Request")
         return requests.get(
             f'https://shopee.com.my/shop/145423/followers?offset={self.current}&__classic__=1').text
 
@@ -63,18 +63,28 @@ class Shopee():
 
     def get_username_and_links(self, followers):
         """
-        An internal method to get username and link as str and append to usernames array
+        An internal method to get username and link as str
+
+        Returns:
+
+        An array(batch) of users link
 
         """
 
-        print("Adding Links to array variable")
+        print("Compiling Batch of Users\n")
+        batch = []
         for follower in followers:
             anchor_tag = follower.find('a')
-            username = anchor_tag.get("href")[1:]
-            link_to_username = f'{self.base_url_for_follower_page}{anchor_tag.get("href")}'
-            self.usernames.append(f'{link_to_username} {username}')
+            try:
+                username = anchor_tag.get("href")[1:]
+            except TypeError as error:
+                continue
+            link_to_username = f'{self.base_url_for_follower_page}/{username}'
+            batch.append(link_to_username)
+        print("Returning Batch of Users\n")
+        return batch
 
-    def write_usernames_to_file(self):
+    def write_usernames_to_file(self, username_batch):
         """
         An internal method to write usernames and links to file
 
@@ -82,9 +92,23 @@ class Shopee():
 
         print("Writing Links to file :)")
 
-        for i in self.usernames:
-            with open(self.filename, 'a+') as file:
-                file.write(i+'\n')
+        for i in username_batch:
+            if i not in self.usernames:
+                with open(self.filename, 'a+') as file:
+                    file.write(i+'\n')
+            else:
+                continue
+
+    def delete_duplicates(self):
+        """
+        An internal method to delete duplicates from the file
+
+        """
+        with open(self.filename, 'r') as file:
+            links = list(set(file.readlines()))
+            with open(self.filename, 'w+') as file:
+                for i in links:
+                    file.write(i+'\n')
 
     def run(self):
         """
@@ -99,12 +123,15 @@ class Shopee():
             try:
                 data = json.loads(html_doc)
                 if data["no_more"]:
-                    print("We've reached the very end, ENDIIIIIIIIIIN!")
+                    print("We've reached the very end, Ending Script right now!")
                     self.end = True
             except json.decoder.JSONDecodeError as error:
                 followers = self.get_followers(html_doc)
-                self.get_username_and_links(followers)
-                self.write_usernames_to_file()
+                usernames_batch = self.get_username_and_links(followers)
+                # After fetching batch of users, write it to file
+                self.write_usernames_to_file(usernames_batch)
 
             # Update the current offsets
             self.current += self.offset
+
+        self.delete_duplicates()
