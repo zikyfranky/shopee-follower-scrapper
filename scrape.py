@@ -43,6 +43,7 @@ class Shopee():
 
         str: the webpage html as a string
         """
+        print("Fetching Request")
         return requests.get(
             f'https://shopee.com.my/shop/145423/followers?offset={self.current}&__classic__=1').text
 
@@ -66,6 +67,7 @@ class Shopee():
 
         """
 
+        print("Adding Links to array variable")
         for follower in followers:
             anchor_tag = follower.find('a')
             username = anchor_tag.get("href")[1:]
@@ -77,6 +79,8 @@ class Shopee():
         An internal method to write usernames and links to file
 
         """
+
+        print("Writing Links to file :)")
 
         for i in self.usernames:
             with open(self.filename, 'a+') as file:
@@ -95,7 +99,8 @@ class Shopee():
             try:
                 data = json.loads(html_doc)
                 if data["no_more"]:
-                    end = True
+                    print("We've reached the very end, ENDIIIIIIIIIIN!")
+                    self.end = True
             except json.decoder.JSONDecodeError as error:
                 followers = self.get_followers(html_doc)
                 self.get_username_and_links(followers)
