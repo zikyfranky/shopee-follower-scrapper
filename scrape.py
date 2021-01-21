@@ -159,12 +159,13 @@ class Shopee():
                 # After fetching batch of users, write it to file
                 self.write_usernames_to_file(usernames_batch)
 
+            # Update the current offset
+            self.current += self.offset
+
             # Save last request
             with open(self.last_offset_filename, 'w+') as last:
                 last.write(str(self.current))
 
-            # Update the current offset
-            self.current += self.offset
             self.clear()
 
         self.delete_duplicates()
