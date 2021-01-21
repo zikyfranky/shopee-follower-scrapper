@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup as BS
 import requests
 import json
+from os import system, name
 
 
 class Shopee():
@@ -14,6 +15,8 @@ class Shopee():
 
     offset (int): An integer that determines the value the offset adds by
 
+    last_offset (int): An integer that determines the value of the last request
+
     current (int): An integer that determines the current offset to fetch
 
     base_url_for_follower_page (str): A link to the base url of a shopee user ie "https://shopee.com.my"
@@ -22,18 +25,30 @@ class Shopee():
 
     filename (str): Name of file to save the fetched users
 
+    last_offset_filename (str): Name of file to save last request
+
     Returns:
 
     class_obj: Returns an obj of this class
     """
 
     def __init__(self):
-        self.end = False
-        self.offset = 20
-        self.current = 0
+        self.last_offset = 0
         self.base_url_for_follower_page = "https://shopee.com.my"
         self.usernames = []
         self.filename = "./followers.txt"
+        self.last_offset_filename = "./last_offset.txt"
+        self.end = False
+        self.offset = 20
+
+        try:
+            with open(self.last_offset_filename, 'r') as lo:
+                off = lo.readline()
+                self.last_offset = int('0' if off == '' else off)
+        except FileNotFoundError as error:
+            pass
+
+        self.current = self.last_offset
 
     def get_html(self):
         """
@@ -108,7 +123,19 @@ class Shopee():
             links = list(set(file.readlines()))
             with open(self.filename, 'w+') as file:
                 for i in links:
-                    file.write(i+'\n')
+                    file.write(i)
+
+    def clear(self):
+        """
+        Clear the console
+        """
+        # for windows
+        if name == 'nt':
+            system('cls')
+
+        # for mac and linux(here, os.name is 'posix')
+        else:
+            system('clear')
 
     def run(self):
         """
@@ -128,10 +155,16 @@ class Shopee():
             except json.decoder.JSONDecodeError as error:
                 followers = self.get_followers(html_doc)
                 usernames_batch = self.get_username_and_links(followers)
+
                 # After fetching batch of users, write it to file
                 self.write_usernames_to_file(usernames_batch)
 
-            # Update the current offsets
+            # Save last request
+            with open(self.last_offset_filename, 'w+') as last:
+                last.write(str(self.current))
+
+            # Update the current offset
             self.current += self.offset
+            self.clear()
 
         self.delete_duplicates()
